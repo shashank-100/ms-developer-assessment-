@@ -28,13 +28,13 @@ A comprehensive tool for monitoring market liquidity and guiding cash allocation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/mscapital.git
+git clone https://github.com/shashank-100/ms-developer-assessment-
 cd mscapital
 ```
 
 2. Install dependencies using uv:
 ```bash
-uv pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 3. Run the application:
