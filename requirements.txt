@@ -1,18 +1,20 @@
-streamlit
-yfinance
-plotly
-pandas
-numpy
-requests
-python-dotenv
-datetime
-joblib
-lightgbm==4.5.0
-scikit-learn
-optuna
-transformers
-torch
-torchvision
-feedparser
-fintechlab
-matplotlib
+# Core dependencies
+streamlit>=1.24.0
+pandas>=1.5.0
+numpy>=1.21.0
+plotly>=5.13.0
+yfinance>=0.2.18
+requests>=2.28.0
+python-dotenv>=0.19.0
+
+# Removed unused packages:
+# - joblib
+# - lightgbm
+# - scikit-learn
+# - optuna
+# - transformers
+# - torch
+# - torchvision
+# - feedparser
+# - fintechlab
+# - matplotlib

@@ -1,29 +1,124 @@
-# StockZen
+# MSCapital - Market Liquidity Dashboard & Cash Allocation Tool
 
-**StockZen** is a modern Indian stock dashboard designed to empower investors with live market data, advanced charting, and cutting-edge machine learning-based predictions for Indian stocks using Yahoo Finance data. Built with Streamlit, LightGBM, XGBoost and Optuna, StockZen helps you make informed investment decisions by analyzing both recent and full historical data.
-
-StockZen combines modern technology with local market expertise to bring you a seamless, user-friendly investing experience.
-
-**Web Link:** https://stockzen.streamlit.app
+A comprehensive tool for monitoring market liquidity and guiding cash allocation in Indian equity portfolios. This dashboard provides insights into market conditions and helps investors make informed decisions about their cash positions.
 
 ## Features
 
-- **Real-Time Data Fetching:**  
-  Get up-to-date stock information directly from Yahoo Finance.
+### 1. Market Indicators
+- Nifty 50 index tracking (Real-time data)
+- India VIX (volatility index) monitoring (Real-time data)
+- FII/DII flow analysis (Synthetic data for demonstration)
+- Market breadth indicators (Synthetic data for demonstration)
 
-- **Interactive Charting:**  
-  Visualize market trends with interactive candlestick charts enhanced with moving averages, Bollinger Bands, RSI, and volume indicators. Hover over the chart to view the exact dates on the x-axis.
+### 2. Interactive Dashboard
+- Interactive time series plots
+- Customizable date ranges (up to 3 years)
+- Real-time metric updates
+- Risk tolerance settings (Low/Medium/High)
 
-- **Machine Learning Predictions:**  
-  Generate 7-day price forecasts using a LightGBM model tuned with Optuna on full historical data.
-  - **Daily Returns:**  
-    - The first predicted day’s return is calculated relative to the current (last historical) price.
-    - Each subsequent day’s return is computed as the percentage change from the previous predicted day.
-  - **Overall Expected Change:**  
-    The expected change is calculated as the percentage difference between the 7th day predicted price and the current price.
+### 3. Cash Allocation Model
+- Smart scoring system based on:
+  - Market Volatility (VIX)
+  - Institutional Flows (FII/DII)
+  - Market Breadth
+- Risk-adjusted recommendations (0-30% cash)
+- Component-wise scoring breakdown
 
-- **News Integration:**  
-  Stay updated with the latest news articles relevant to your selected stock.
+## Quick Start
 
-- **Model Caching & Refresh:**  
-  Tuned models are cached per stock for fast predictions. Use the "Refresh Model Cache" button to retrain the model if needed.
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/mscapital.git
+cd mscapital
+```
+
+2. Install dependencies using uv:
+```bash
+uv pip install -r requirements.txt
+```
+
+3. Run the application:
+```bash
+streamlit run app.py
+```
+
+The app will open in your default web browser at http://localhost:8501
+
+## How It Works
+
+### 1. Market Data Collection
+- **Real Data**:
+  - Nifty 50 data from Yahoo Finance (^NSEI)
+  - India VIX data from Yahoo Finance (INDIAVIX.NS)
+- **Synthetic Data** (for demonstration):
+  - FII/DII data: Simulated institutional flows
+  - Market breadth data: Simulated advance-decline ratios
+
+### 2. Why Synthetic Data?
+- **FII/DII Data**:
+  - Real data requires NSE membership and API access
+  - Not available through public APIs
+  - Synthetic data demonstrates the model's logic
+- **Market Breadth**:
+  - Real calculation needs data for all NSE stocks
+  - Requires significant infrastructure
+  - Synthetic data shows the concept
+
+### 3. Cash Allocation Logic
+The model recommends cash allocation (0-30%) based on:
+
+1. **Market Volatility (VIX)**
+   - Higher VIX = More cash recommended
+   - Measures market fear/uncertainty
+
+2. **Institutional Flows (FII/DII)**
+   - Negative flows = More cash recommended
+   - Tracks foreign and domestic institutional activity
+
+3. **Market Breadth**
+   - Poor breadth = More cash recommended
+   - Measures overall market health
+
+### 4. Risk Tolerance Levels
+- **Low Risk**: More weight to VIX (40%)
+- **Medium Risk**: Balanced weights (33% each)
+- **High Risk**: More weight to FII/DII (40%)
+
+## Project Structure
+
+```
+mscapital/
+├── src/
+│   ├── data/
+│   │   └── data_collector.py    # Data fetching and processing
+│   ├── visualization/
+│   │   └── plotter.py          # Chart creation
+│   └── models/
+│       └── cash_allocation.py  # Cash allocation logic
+├── app.py                      # Main Streamlit application
+└── requirements.txt            # Project dependencies
+```
+
+## Data Sources
+
+- **Real-Time Data**:
+  - Nifty 50: Yahoo Finance (^NSEI)
+  - India VIX: Yahoo Finance (INDIAVIX.NS)
+- **Synthetic Data** (for demonstration):
+  - FII/DII: Simulated institutional flows
+  - Market Breadth: Simulated advance-decline ratios
+
+## Future Improvements
+
+- Integrate real FII/DII data with NSE API access
+- Implement real market breadth calculation
+- Add more market indicators
+- Enhance visualization options
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
