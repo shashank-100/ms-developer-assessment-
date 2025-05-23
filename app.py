@@ -110,49 +110,44 @@ st.title("Market Liquidity Dashboard & Cash Allocation Tool")
 
 # Fetch data
 try:
-    with st.spinner("Fetching market data..."):
-        logger.info("Fetching Nifty data...")
-        nifty_data = data_collector.get_nifty_data(
-            selected_start.strftime("%Y-%m-%d"),
-            selected_end.strftime("%Y-%m-%d")
-        )
+    with st.spinner("Loading market data from CSV files..."):
+        logger.info("Loading Nifty data...")
+        nifty_data = pd.read_csv(os.path.join("data", "nifty50.csv"), skiprows=2)
+        nifty_data.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume']
+        nifty_data['Date'] = pd.to_datetime(nifty_data['Date'])
         logger.info(f"Nifty data shape: {nifty_data.shape if not nifty_data.empty else 'Empty'}")
         
-        logger.info("Fetching VIX data...")
-        vix_data = data_collector.get_india_vix(
-            selected_start.strftime("%Y-%m-%d"),
-            selected_end.strftime("%Y-%m-%d")
-        )
+        logger.info("Loading VIX data...")
+        vix_data = pd.read_csv(os.path.join("data", "india_vix_historical.csv"))
+        vix_data.columns = ['Date', 'Close']  # VIX data only has Date and Close columns
+        vix_data['Date'] = pd.to_datetime(vix_data['Date'])
         logger.info(f"VIX data shape: {vix_data.shape if not vix_data.empty else 'Empty'}")
         
-        logger.info("Fetching FII/DII data...")
-        fii_dii_data = data_collector.get_fii_dii_data(
-            selected_start.strftime("%Y-%m-%d"),
-            selected_end.strftime("%Y-%m-%d")
-        )
+        logger.info("Loading FII/DII data...")
+        fii_dii_data = pd.read_csv(os.path.join("data", "fii_dii_flows.csv"))
+        fii_dii_data['Date'] = pd.to_datetime(fii_dii_data['Date'])
         logger.info(f"FII/DII data shape: {fii_dii_data.shape if not fii_dii_data.empty else 'Empty'}")
         
-        logger.info("Fetching market breadth data...")
-        breadth_data = data_collector.get_market_breadth(
-            selected_start.strftime("%Y-%m-%d"),
-            selected_end.strftime("%Y-%m-%d")
-        )
+        logger.info("Loading market breadth data...")
+        breadth_data = pd.read_csv(os.path.join("data", "nifty_midcap100.csv"), skiprows=2)
+        breadth_data.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume']
+        breadth_data['Date'] = pd.to_datetime(breadth_data['Date'])
         logger.info(f"Market breadth data shape: {breadth_data.shape if not breadth_data.empty else 'Empty'}")
         
         # Check if any data is empty
         if nifty_data.empty:
-            st.error("Failed to fetch Nifty data. Please check your data source and date range.")
+            st.error("Failed to load Nifty data. Please check your data file.")
         if vix_data.empty:
-            st.error("Failed to fetch VIX data. Please check your data source and date range.")
+            st.error("Failed to load VIX data. Please check your data file.")
         if fii_dii_data.empty:
-            st.error("Failed to fetch FII/DII data. Please check your data source and date range.")
+            st.error("Failed to load FII/DII data. Please check your data file.")
         if breadth_data.empty:
-            st.error("Failed to fetch market breadth data. Please check your data source and date range.")
+            st.error("Failed to load market breadth data. Please check your data file.")
             
 except Exception as e:
-    logger.error(f"Error fetching market data: {str(e)}")
-    st.error(f"Error fetching market data: {str(e)}")
-    st.error("Please check if your data sources are properly configured and accessible.")
+    logger.error(f"Error loading market data: {str(e)}")
+    st.error(f"Error loading market data: {str(e)}")
+    st.error("Please check if your data files are properly configured and accessible.")
     st.stop()
 
 # Display key metrics
@@ -209,18 +204,18 @@ with col3:
 with col4:
     if not breadth_data.empty:
         try:
-            last_breadth = float(breadth_data['adv_dec_ratio'].iloc[-1])
-            breadth_diff = float(breadth_data['adv_dec_ratio'].iloc[-1] - breadth_data['adv_dec_ratio'].mean())
+            last_breadth = float(breadth_data['Close'].iloc[-1])
+            breadth_diff = float(breadth_data['Close'].pct_change().iloc[-1] * 100)
             st.metric(
-                "Market Breadth",
-                f"{last_breadth:.2f}",
-                f"{breadth_diff:.2f}"
+                "Nifty Midcap 100",
+                f"₹{last_breadth:,.2f}",
+                f"{breadth_diff:.2f}%"
             )
         except Exception as e:
             st.error(f"Error displaying market breadth metrics: {str(e)}")
-            st.metric("Market Breadth", "Error", "Error")
+            st.metric("Nifty Midcap 100", "Error", "Error")
     else:
-        st.metric("Market Breadth", "N/A", "N/A")
+        st.metric("Nifty Midcap 100", "N/A", "N/A")
 
 # Create plots
 st.markdown("---")

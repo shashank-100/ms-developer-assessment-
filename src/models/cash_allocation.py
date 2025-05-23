@@ -58,16 +58,18 @@ class CashAllocationModel:
 
     def calculate_market_breadth_score(self, breadth_data: pd.DataFrame) -> float:
         """
-        Calculate score based on market breadth
-        Lower breadth = Higher cash allocation
+        Calculate score based on Nifty Midcap 100 price movement
+        Lower price momentum = Higher cash allocation
         """
-        current_breadth = breadth_data['adv_dec_ratio'].iloc[-1]
-        breadth_mean = breadth_data['adv_dec_ratio'].mean()
-        breadth_std = breadth_data['adv_dec_ratio'].std()
+        # Calculate 20-day price momentum
+        current_price = breadth_data['Close'].iloc[-1]
+        price_20d_ago = breadth_data['Close'].iloc[-20]
+        price_momentum = (current_price - price_20d_ago) / price_20d_ago
         
-        # Normalize breadth score between 0 and 1
-        breadth_score = 1 - min(1.0, max(0.0, (current_breadth - breadth_mean) / (2 * breadth_std) + 0.5))
-        return breadth_score
+        # Normalize momentum score between 0 and 1
+        # Higher negative momentum = Higher cash allocation
+        momentum_score = 1 - min(1.0, max(0.0, (price_momentum + 0.1) / 0.2))
+        return momentum_score
 
     def calculate_cash_allocation(self,
                                 vix_data: pd.DataFrame,

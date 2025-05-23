@@ -8,7 +8,7 @@ A comprehensive tool for monitoring market liquidity and guiding cash allocation
 - Nifty 50 index tracking (Real-time data)
 - India VIX (volatility index) monitoring (Real-time data)
 - FII/DII flow analysis (Synthetic data for demonstration)
-- Market breadth indicators (Synthetic data for demonstration)
+- Nifty Midcap 100 tracking (Real-time data)
 
 ### 2. Interactive Dashboard
 - Interactive time series plots
@@ -20,7 +20,7 @@ A comprehensive tool for monitoring market liquidity and guiding cash allocation
 - Smart scoring system based on:
   - Market Volatility (VIX)
   - Institutional Flows (FII/DII)
-  - Market Breadth
+  - Midcap Market Momentum (Nifty Midcap 100)
 - Risk-adjusted recommendations (0-30% cash)
 - Component-wise scoring breakdown
 
@@ -50,19 +50,15 @@ The app will open in your default web browser at http://localhost:8501
 - **Real Data**:
   - Nifty 50 data from Yahoo Finance (^NSEI)
   - India VIX data from Yahoo Finance (INDIAVIX.NS)
+  - Nifty Midcap 100 data from Yahoo Finance (NIFTYMIDCAP100.NS)
 - **Synthetic Data** (for demonstration):
   - FII/DII data: Simulated institutional flows
-  - Market breadth data: Simulated advance-decline ratios
 
 ### 2. Why Synthetic Data?
 - **FII/DII Data**:
   - Real data requires NSE membership and API access
   - Not available through public APIs
   - Synthetic data demonstrates the model's logic
-- **Market Breadth**:
-  - Real calculation needs data for all NSE stocks
-  - Requires significant infrastructure
-  - Synthetic data shows the concept
 
 ### 3. Cash Allocation Logic
 The model recommends cash allocation (0-30%) based on:
@@ -75,9 +71,10 @@ The model recommends cash allocation (0-30%) based on:
    - Negative flows = More cash recommended
    - Tracks foreign and domestic institutional activity
 
-3. **Market Breadth**
-   - Poor breadth = More cash recommended
-   - Measures overall market health
+3. **Midcap Market Momentum (Nifty Midcap 100)**
+   - Negative price momentum = More cash recommended
+   - Measures broader market health through midcap performance
+   - Uses 20-day price momentum to gauge market sentiment
 
 ### 4. Risk Tolerance Levels
 - **Low Risk**: More weight to VIX (40%)
@@ -104,16 +101,16 @@ mscapital/
 - **Real-Time Data**:
   - Nifty 50: Yahoo Finance (^NSEI)
   - India VIX: Yahoo Finance (INDIAVIX.NS)
+  - Nifty Midcap 100: Yahoo Finance (NIFTYMIDCAP100.NS)
 - **Synthetic Data** (for demonstration):
   - FII/DII: Simulated institutional flows
-  - Market Breadth: Simulated advance-decline ratios
 
 ## Future Improvements
 
 - Integrate real FII/DII data with NSE API access
-- Implement real market breadth calculation
-- Add more market indicators
+- Add more market indicators (e.g., sector rotation, market internals)
 - Enhance visualization options
+- Add historical backtesting capabilities
 
 ## Contributing
 

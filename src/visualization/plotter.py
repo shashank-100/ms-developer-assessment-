@@ -121,23 +121,24 @@ class Plotter:
     def create_market_breadth_plot(self, 
                                  breadth_data: pd.DataFrame) -> go.Figure:
         """
-        Create a plot showing market breadth indicators
+        Create a plot showing market breadth using Nifty Midcap 100
         """
         fig = go.Figure()
 
         fig.add_trace(
             go.Scatter(
-                x=breadth_data.index,
-                y=breadth_data['adv_dec_ratio'],
-                name="Advance-Decline Ratio",
+                x=breadth_data['Date'],
+                y=breadth_data['Close'],
+                name="Nifty Midcap 100",
                 line=dict(color=self.color_scheme['primary'])
             )
         )
 
         fig.update_layout(
-            title="Market Breadth (Advance-Decline Ratio)",
+            title="Market Breadth (Nifty Midcap 100)",
             template='plotly_white',
-            hovermode='x unified'
+            hovermode='x unified',
+            yaxis_title="Price"
         )
 
         return fig 

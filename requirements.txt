@@ -4,8 +4,11 @@ pandas>=1.5.0
 numpy>=1.21.0
 plotly>=5.13.0
 yfinance>=0.2.18
-requests>=2.28.0
+requests>=2.26.0
 python-dotenv>=0.19.0
+matplotlib>=3.5.0
+seaborn>=0.11.0
+beautifulsoup4>=4.9.0
 
 # Removed unused packages:
 # - joblib

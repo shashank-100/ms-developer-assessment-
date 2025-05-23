@@ -1,118 +1,129 @@
 import pandas as pd
 import requests
-import yfinance as yf
 from datetime import datetime, timedelta
 import logging
 from typing import Dict, List, Optional
 import numpy as np
+import json
+import time
+import yfinance as yf
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class DataCollector:
     def __init__(self):
-        self.nse_base_url = "https://www.nseindia.com/api/v1"
-        self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        }
+        self.data_dir = "data"
+        if not os.path.exists(self.data_dir):
+            os.makedirs(self.data_dir)
 
     def get_nifty_data(self, start_date: str, end_date: str) -> pd.DataFrame:
         """
-        Fetch Nifty 50 historical data using yfinance
+        Load Nifty 50 historical data from local file
         """
         try:
-            nifty = yf.download("^NSEI", start=start_date, end=end_date)
-            return nifty
+            file_path = os.path.join(self.data_dir, "nifty50.csv")
+            if not os.path.exists(file_path):
+                logger.error(f"Nifty data file not found at {file_path}")
+                return pd.DataFrame()
+            # Always skip 3 rows and set column names manually
+            col_names = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume']
+            nifty_data = pd.read_csv(file_path, skiprows=3, names=col_names, header=None)
+            nifty_data['Date'] = pd.to_datetime(nifty_data['Date'])
+            nifty_data.set_index('Date', inplace=True)
+            numeric_cols = ['Open', 'High', 'Low', 'Close', 'Volume']
+            for col in numeric_cols:
+                if col in nifty_data.columns:
+                    nifty_data[col] = pd.to_numeric(nifty_data[col], errors='coerce')
+            mask = (nifty_data.index >= pd.to_datetime(start_date)) & (nifty_data.index <= pd.to_datetime(end_date))
+            return nifty_data[mask]
         except Exception as e:
-            logger.error(f"Error fetching Nifty data: {str(e)}")
+            logger.error(f"Error loading Nifty data: {str(e)}")
             return pd.DataFrame()
 
     def get_india_vix(self, start_date: str, end_date: str) -> pd.DataFrame:
         """
-        Fetch India VIX historical data using yfinance
+        Load India VIX historical data from local file
         """
         try:
-            # Try to fetch VIX data with different parameters
-            vix_data = yf.download(
-                "INDIAVIX.NS",
-                start=start_date,
-                end=end_date,
-                progress=False,
-                auto_adjust=True
-            )
-            
-            if vix_data.empty:
-                # If empty, try with a different symbol
-                vix_data = yf.download(
-                    "^NSEVIX",
-                    start=start_date,
-                    end=end_date,
-                    progress=False,
-                    auto_adjust=True
-                )
-            
-            if vix_data.empty:
-                # If still empty, generate synthetic VIX data
-                logger.warning("Could not fetch VIX data, generating synthetic data")
+            file_path = os.path.join(self.data_dir, "india_vix.csv")
+            if not os.path.exists(file_path):
+                logger.error(f"India VIX data file not found at {file_path}")
+                # Generate synthetic VIX data
                 date_range = pd.date_range(start=start_date, end=end_date, freq='D')
-                np.random.seed(42)  # For reproducibility
-                
-                # Generate synthetic VIX data (typically between 10 and 30)
-                vix_values = np.random.normal(20, 5, len(date_range))  # Mean 20, SD 5
-                vix_values = np.clip(vix_values, 10, 30)  # Clip between 10 and 30
-                
+                np.random.seed(42)
+                vix_values = np.random.normal(20, 5, len(date_range))
+                vix_values = np.clip(vix_values, 10, 30)
                 vix_data = pd.DataFrame({
-                    'Date': date_range,
                     'Close': vix_values
-                })
-                vix_data.set_index('Date', inplace=True)
+                }, index=date_range)
+                return vix_data
             
-            return vix_data
+            vix_data = pd.read_csv(file_path, index_col=0, parse_dates=True, date_parser=pd.to_datetime)
+            # Convert numeric columns to float
+            numeric_cols = ['Open', 'High', 'Low', 'Close', 'Volume']
+            for col in numeric_cols:
+                if col in vix_data.columns:
+                    vix_data[col] = pd.to_numeric(vix_data[col], errors='coerce')
             
+            # Filter data for the requested date range
+            mask = (vix_data.index >= pd.to_datetime(start_date)) & (vix_data.index <= pd.to_datetime(end_date))
+            return vix_data[mask]
         except Exception as e:
-            logger.error(f"Error fetching India VIX data: {str(e)}")
+            logger.error(f"Error loading India VIX data: {str(e)}")
             return pd.DataFrame()
 
     def get_fii_dii_data(self, start_date: str, end_date: str) -> pd.DataFrame:
         """
-        Fetch FII/DII flow data from NSE
+        Load FII/DII flow data from local file
         """
         try:
-            # For now, we'll generate synthetic FII/DII data
-            # In a real implementation, you would fetch this from NSE's API
-            date_range = pd.date_range(start=start_date, end=end_date, freq='D')
-            np.random.seed(42)  # For reproducibility
+            file_path = os.path.join(self.data_dir, "fii_dii_flows.csv")
+            if not os.path.exists(file_path):
+                logger.error(f"FII/DII data file not found at {file_path}")
+                return pd.DataFrame()
             
-            fii_data = pd.DataFrame({
-                'Date': date_range,
-                'FII': np.random.normal(1000, 500, len(date_range)),  # Mean 1000 Cr, SD 500 Cr
-                'DII': np.random.normal(800, 400, len(date_range))    # Mean 800 Cr, SD 400 Cr
-            })
-            fii_data.set_index('Date', inplace=True)
-            return fii_data
+            fii_dii_data = pd.read_csv(file_path, index_col=0, parse_dates=True, date_parser=pd.to_datetime)
+            # Convert numeric columns to float
+            numeric_cols = ['FII', 'DII']
+            for col in numeric_cols:
+                if col in fii_dii_data.columns:
+                    fii_dii_data[col] = pd.to_numeric(fii_dii_data[col], errors='coerce')
+            
+            # Filter data for the requested date range
+            mask = (fii_dii_data.index >= pd.to_datetime(start_date)) & (fii_dii_data.index <= pd.to_datetime(end_date))
+            return fii_dii_data[mask]
         except Exception as e:
-            logger.error(f"Error fetching FII/DII data: {str(e)}")
+            logger.error(f"Error loading FII/DII data: {str(e)}")
             return pd.DataFrame()
 
     def get_market_breadth(self, start_date: str, end_date: str) -> pd.DataFrame:
         """
-        Calculate market breadth using advance-decline ratios
+        Calculate market breadth using advance-decline ratios from Nifty data
         """
         try:
-            # For now, we'll generate synthetic market breadth data
-            # In a real implementation, you would calculate this from actual stock data
-            date_range = pd.date_range(start=start_date, end=end_date, freq='D')
-            np.random.seed(42)  # For reproducibility
+            # Get Nifty data
+            nifty_data = self.get_nifty_data(start_date, end_date)
+            if nifty_data.empty:
+                logger.error("Cannot calculate market breadth without Nifty data")
+                return pd.DataFrame()
             
-            # Generate random advance-decline ratios
-            adv_dec_ratio = np.random.normal(1.0, 0.2, len(date_range))  # Mean 1.0, SD 0.2
-            adv_dec_ratio = np.clip(adv_dec_ratio, 0.1, 2.0)  # Clip between 0.1 and 2.0
+            # Ensure Close column is numeric
+            nifty_data['Close'] = pd.to_numeric(nifty_data['Close'], errors='coerce')
             
+            # Calculate daily returns
+            nifty_data['Returns'] = nifty_data['Close'].pct_change()
+            
+            # Calculate advance-decline ratio (simplified version)
+            # In a real implementation, you would use actual advance-decline data
+            nifty_data['adv_dec_ratio'] = np.where(nifty_data['Returns'] > 0, 1.2, 0.8)
+            
+            # Create market breadth dataframe
             breadth_data = pd.DataFrame({
-                'Date': date_range,
-                'adv_dec_ratio': adv_dec_ratio
+                'adv_dec_ratio': nifty_data['adv_dec_ratio']
             })
-            breadth_data.set_index('Date', inplace=True)
+            
             return breadth_data
         except Exception as e:
             logger.error(f"Error calculating market breadth: {str(e)}")
@@ -123,8 +134,9 @@ class DataCollector:
         Save data to CSV file
         """
         try:
-            data.to_csv(f"data/{filename}.csv")
-            logger.info(f"Data saved to {filename}.csv")
+            file_path = os.path.join(self.data_dir, f"{filename}.csv")
+            data.to_csv(file_path)
+            logger.info(f"Data saved to {file_path}")
         except Exception as e:
             logger.error(f"Error saving data: {str(e)}")
 
@@ -134,12 +146,19 @@ if __name__ == "__main__":
     end_date = datetime.now()
     start_date = end_date - timedelta(days=3*365)  # 3 years of data
     
-    # Fetch and save Nifty data
+    # Load and display data
     nifty_data = collector.get_nifty_data(start_date.strftime("%Y-%m-%d"), 
                                         end_date.strftime("%Y-%m-%d"))
-    collector.save_data(nifty_data, "nifty_historical")
+    print(f"Nifty data shape: {nifty_data.shape}")
     
-    # Fetch and save VIX data
     vix_data = collector.get_india_vix(start_date.strftime("%Y-%m-%d"), 
                                      end_date.strftime("%Y-%m-%d"))
-    collector.save_data(vix_data, "india_vix_historical") 
+    print(f"VIX data shape: {vix_data.shape}")
+    
+    fii_dii_data = collector.get_fii_dii_data(start_date.strftime("%Y-%m-%d"), 
+                                            end_date.strftime("%Y-%m-%d"))
+    print(f"FII/DII data shape: {fii_dii_data.shape}")
+    
+    breadth_data = collector.get_market_breadth(start_date.strftime("%Y-%m-%d"), 
+                                             end_date.strftime("%Y-%m-%d"))
+    print(f"Market breadth data shape: {breadth_data.shape}") 
